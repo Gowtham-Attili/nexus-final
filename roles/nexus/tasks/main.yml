@@ -1,0 +1,89 @@
+---
+- name: Update the packages
+  apt: 
+    update_cache: yes 
+    force_apt_get: yes 
+    cache_valid_time: 3600
+
+- name: Install PHP
+  apt:
+    name: php
+    state: present
+
+- name: Add nexus groupname
+  group:
+    name: "{{ nexus_group }}"
+
+- name: Add nexus username
+  user:
+    name: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    home: /usr/share/nexus
+    createhome: yes
+
+- name: Create nexus directory
+  file:
+    path: "{{ nexus_dir }}"
+    state: directory
+    mode: 0755
+
+- name: Create sonar type directory
+  file:
+    path: "{{ sonar_type_dir }}"
+    state: directory
+    mode: 0755
+
+- name: Download the nexus packages
+  unarchive:
+    src: "{{ nexus_url }}"
+    dest: "{{ nexus_dir }}"
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+
+- name: Uncomment the run as user from nexus file
+  lineinfile:
+    path: "{{ nexus_rc_file }}"
+    regexp: 'run_as_user="nexus"'
+    line: run_as_user="nexus"
+
+- name: Change the ownership of nexus directory
+  file:
+    path: "{{ nexus_dir }}"
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    mode: "0755"
+    recurse: yes
+    state: directory
+
+- name: Change the ownership of sonar type directory
+  file:
+    path: "{{ sonar_type_dir }}"
+    owner: "{{ nexus_user }}"
+    group: "{{ nexus_group }}"
+    mode: "0755"
+    recurse: yes
+    state: directory
+
+- name: Create symbolic links to /etc/init.d/nexus
+  file: 
+    src: "{{ nexus_service_loc }}"
+    dest: /etc/init.d/nexus 
+    state: link
+    force: yes
+
+- name: Configure runlevel links for nexus
+  command: update-rc.d nexus defaults
+  notify: 
+    - Start nexus service
+
+- name: Copy nexus.service template
+  template:
+    src: nexus.service.j2
+    dest: /etc/systemd/system/nexus.service
+
+handlers:
+  - name: Start nexus service
+    service:
+      name: nexus
+      state: started
+      enabled: yes
