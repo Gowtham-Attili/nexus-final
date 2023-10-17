@@ -5,16 +5,6 @@
     force_apt_get: yes
     cache_valid_time: 3600
 
-- name: Install the pip3
-  apt:
-    name: python3-pip
-    state: present
-
-- name: Install the php
-  apt:
-    name: php
-    state: present
-
 - name: add nexus groupname
   group:
     name: "{{nexus_group}}"
@@ -32,9 +22,9 @@
     state: directory
     mode: "0755"
 
-- name: create sonar type directory
+- name: create sonatype nexus directory
   file:
-    path: "{{ sonar_type_dir }}"
+    path: "{{ sona_type_dir }}"
     state: directory
     mode: "0755"
 
@@ -63,7 +53,7 @@
 
 - name: change the ownership of file
   file:
-    path: "{{ sonar_type_dir }}"
+    path: "{{ sona_type_dir }}"
     owner: "{{ nexus_user }}"
     group: "{{ nexus_group }}"
     mode: "0755"
