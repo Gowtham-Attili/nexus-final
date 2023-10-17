@@ -67,6 +67,12 @@
     state: link
     force: yes
 
+- name: Copy Nexus service file
+  copy:
+    src: nexus.jq
+    dest: /etc/systemd/system/nexus.service
+    mode: 0644
+
 - name: configure runlevel links for nexus
   command: update-rc.d nexus defaults
   notify:
